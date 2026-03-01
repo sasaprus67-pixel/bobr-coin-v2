@@ -7,13 +7,28 @@
     <style>
         body { background: #000; color: #fff; text-align: center; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
         #score { font-size: 60px; color: gold; font-weight: bold; margin-bottom: 10px; }
-        #bobr { width: 240px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; z-index: 2; }
+        #bobr { width: 240px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; outline: none; }
         #bobr:active { transform: scale(0.95); }
         
-        /* Стилі для енергії */
-        #energy-container { width: 70%; height: 15px; background: #333; border-radius: 10px; margin-top: 30px; overflow: hidden; border: 2px solid #555; }
-        #energy-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ffcc00, #ff6600); transition: width 0.1s; }
-        #energy-text { font-size: 18px; margin-top: 10px; color: #aaa; font-weight: bold; }
+        /* КОНТЕЙНЕР ДЛЯ ЕНЕРГІЇ */
+        #energy-container { 
+            width: 280px; 
+            height: 20px; 
+            background: #333; 
+            border-radius: 10px; 
+            margin: 20px auto 0 auto; 
+            overflow: hidden; 
+            border: 2px solid #fff;
+            position: relative;
+        }
+        /* САМА СМУЖКА */
+        #energy-bar { 
+            width: 100%; 
+            height: 100%; 
+            background: #ffcc00; 
+            transition: width 0.2s; 
+        }
+        #energy-text { font-size: 18px; margin-top: 10px; color: #fff; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -29,7 +44,6 @@
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Налаштування гри
         const maxEnergy = 500;
         let s = parseInt(localStorage.getItem('bobr_score')) || 0;
         let energy = parseInt(localStorage.getItem('bobr_energy')) || maxEnergy;
@@ -40,7 +54,6 @@
 
         scoreElement.innerText = s;
 
-        // Оновлення інтерфейсу енергії
         function updateEnergyUI() {
             let percent = (energy / maxEnergy) * 100;
             energyBar.style.width = percent + "%";
@@ -49,38 +62,28 @@
 
         updateEnergyUI();
 
-        // Клік по Бобру
         document.getElementById('bobr').onclick = () => {
             if (energy >= 1) {
                 s++;
                 energy -= 1;
                 scoreElement.innerText = s;
-                
                 updateEnergyUI();
                 tg.HapticFeedback.impactOccurred('light');
-
-                // Зберігаємо в телефон
                 localStorage.setItem('bobr_score', s.toString());
                 localStorage.setItem('bobr_energy', energy.toString());
             } else {
-                // Якщо енергії нема - трохи трусимо текст
-                energyText.style.color = "red";
-                setTimeout(() => energyText.style.color = "#aaa", 300);
                 tg.HapticFeedback.notificationOccurred('error');
             }
         };
 
-        // Відновлення енергії (1 одиниця на секунду)
         setInterval(() => {
             if (energy < maxEnergy) {
                 energy += 1;
-                if (energy > maxEnergy) energy = maxEnergy;
                 updateEnergyUI();
                 localStorage.setItem('bobr_energy', energy.toString());
             }
         }, 1000);
 
-        // Синхронізація з хмарою раз на 5 сек
         setInterval(() => {
             tg.CloudStorage.setItem('user_score', s.toString());
         }, 5000);
