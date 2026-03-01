@@ -6,65 +6,47 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { background: #000; color: #fff; text-align: center; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        #score { font-size: 70px; color: gold; font-weight: bold; margin-bottom: 10px; }
-        #status { font-size: 14px; color: #555; height: 20px; margin-bottom: 20px; }
+        #score { font-size: 80px; color: gold; font-weight: bold; margin-bottom: 20px; }
         #bobr { width: 260px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
         #bobr:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
     <div id="score">0</div>
-    <div id="status">Завантаження...</div>
     <img src="bobr.jpg" id="bobr" alt="Бобер">
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        tg.enableClosingConfirmation();
         
-        // Беремо максимум між тим, що в телефоні, і тим, що було раніше
-        let s = parseInt(localStorage.getItem('local_score')) || 0;
-        let lastCloudScore = 0;
-        let isSaving = false;
-
+        // 1. Беремо рахунок ТІЛЬКИ з пам'яті телефону (це миттєво)
+        let s = parseInt(localStorage.getItem('bobr_score')) || 0;
         document.getElementById('score').innerText = s;
 
-        // Завантаження з хмари Telegram для синхронізації
-        tg.CloudStorage.getItem('user_score', (err, value) => {
-            if (!err && value) {
-                let cloudScore = parseInt(value);
-                if (cloudScore > s) {
-                    s = cloudScore;
+        // 2. Окремо завантажуємо з хмари тільки при ПЕРШОМУ запуску, якщо телефон порожній
+        if (s === 0) {
+            tg.CloudStorage.getItem('user_score', (err, value) => {
+                if (!err && value) {
+                    s = parseInt(value);
                     document.getElementById('score').innerText = s;
+                    localStorage.setItem('bobr_score', s.toString());
                 }
-                lastCloudScore = s;
-                document.getElementById('status').innerText = "Синхронізовано";
-            }
-        });
+            });
+        }
 
+        // 3. Клік - записуємо в пам'ять телефону миттєво
         document.getElementById('bobr').onclick = () => {
             s++;
             document.getElementById('score').innerText = s;
-            document.getElementById('status').innerText = "Зберігаю...";
-            // Миттєве збереження в пам'ять телефона
-            localStorage.setItem('local_score', s.toString());
+            localStorage.setItem('bobr_score', s.toString()); // Телефон запам'ятав за 0.001 сек
             tg.HapticFeedback.impactOccurred('light');
         };
 
-        // Цикл збереження в хмару (раз на секунду)
+        // 4. Раз на 5 секунд тихенько відправляємо в хмару Telegram про всяк випадок
         setInterval(() => {
-            if (s !== lastCloudScore && !isSaving) {
-                isSaving = true;
-                let scoreToSave = s;
-                tg.CloudStorage.setItem('user_score', scoreToSave.toString(), (err) => {
-                    isSaving = false;
-                    if (!err) {
-                        lastCloudScore = scoreToSave;
-                        document.getElementById('status').innerText = "Збережено ✓";
-                    }
-                });
-            }
-        }, 1000);
+            tg.CloudStorage.setItem('user_score', s.toString());
+        }, 5000);
+
     </script>
 </body>
 </html>
