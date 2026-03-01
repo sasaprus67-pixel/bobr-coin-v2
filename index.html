@@ -45,21 +45,54 @@
         <div id="ns" onclick="sh('s',this)">Shop</div>
         <div id="nz" onclick="sh('z',this)">Tasks</div>
     </div>
-<script>
-var tg=window.Telegram.WebApp, s=0, e=250, bs=1, bt=0;
+    <script>
+var tg=window.Telegram.WebApp, s=0, e=250, bs=1, bt=0, lastC = 0;
 tg.expand();
 var sE=document.getElementById('sc'), fE=document.getElementById('f'), eE=document.getElementById('en'), bz=document.getElementById('bz'), btE=document.getElementById('bt'), bI=document.getElementById('b'), bInv=document.getElementById('bi');
+
 function u(){sE.innerText=s;document.querySelectorAll('.cs').forEach(x=>x.innerText=s);eE.innerText="⚡ "+Math.floor(e)+"/250";fE.style.width=(e/2.5)+"%";bz.disabled=(s<200||bt>0)}
 tg.CloudStorage.getItem('sc',(er,v)=>{if(v&&parseInt(v)>s){s=parseInt(v);u()}});
-bI.onclick=(v)=>{v.preventDefault();if(e>=1){s+=bs; e--; u();tg.HapticFeedback.impactOccurred('light')}if(s%10==0)sv()};
-document.getElementById('bz').onclick=()=>{if(s>=200&&bt<=0){s-=200; bs=5; bt=20; u();let i=setInterval(()=>{bt--;btE.innerText="🔥 "+bt+"s";if(bt<=0){clearInterval(i);bs=1;btE.innerText="";u()}sv()},1000)}};
+
+// ЗАХИСТ ВІД ДЮПУ (Блокуємо клавіатуру)
+window.onkeydown = (i) => { if(i.keyCode === 32 || i.keyCode === 13) i.preventDefault(); };
+
+bI.onclick=(v)=>{
+    v.preventDefault();
+    let now = Date.now();
+    if(now - lastC < 35) return; // Анті-клікер
+    lastC = now;
+    if(e>=1){ s+=bs; e--; u(); tg.HapticFeedback.impactOccurred('light') }
+    if(s%10==0)sv();
+};
+
+document.getElementById('bz').onclick=()=>{
+    if(s>=200&&bt<=0){
+        s-=200; bs=5; bt=20; u();
+        let i=setInterval(()=>{
+            bt--; btE.innerText="🔥 "+bt+"s";
+            if(bt<=0){clearInterval(i); bs=1; btE.innerText=""; u()}
+            sv();
+        },1000);
+    }
+};
+
 bInv.onclick=()=>{
-    let botName = "YOUR_BOT_USERNAME"; 
-    let userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "0";
-    let inviteLink = "https://t.me/share/url?url=https://t.me/" + botName + "?start=" + userId + "&text=Play Bobr Clicker with me! 🦫";
+    let botName = "ВСТАВ_ТУТ_НІК_БОТА"; // Наприклад MyBestBeaverBot (без @)
+    let userId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : "0";
+    let inviteLink = "https://t.me/share/url?url=https://t.me/" + botName + "?start=" + userId + "&text=Join my beaver colony! 🦫";
     tg.openTelegramLink(inviteLink);
 };
-function sh(n,l){document.querySelectorAll('.t').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.n div').forEach(x=>x.classList.remove('a'));document.getElementById(n).classList.add('active');l.classList.add('a')}
+
+function sh(n,l){
+    document.querySelectorAll('.t').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.n div').forEach(x=>x.classList.remove('a'));
+    document.getElementById(n).classList.add('active'); l.classList.add('a');
+}
+
 function sv(){tg.CloudStorage.setItem('sc',s.toString())}
-setInterval(()=>{if(e<250){e++; u()}},1000);setInterval(sv,10000);u();
-</script></body></html>
+setInterval(()=>{if(e<250){e++; u()}},1000);
+setInterval(sv,10000);
+u();
+</script>
+</body>
+</html>
