@@ -6,47 +6,84 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { background: #000; color: #fff; text-align: center; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        #score { font-size: 80px; color: gold; font-weight: bold; margin-bottom: 20px; }
-        #bobr { width: 260px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
+        #score { font-size: 60px; color: gold; font-weight: bold; margin-bottom: 10px; }
+        #bobr { width: 240px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; z-index: 2; }
         #bobr:active { transform: scale(0.95); }
+        
+        /* Стилі для енергії */
+        #energy-container { width: 70%; height: 15px; background: #333; border-radius: 10px; margin-top: 30px; overflow: hidden; border: 2px solid #555; }
+        #energy-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ffcc00, #ff6600); transition: width 0.1s; }
+        #energy-text { font-size: 18px; margin-top: 10px; color: #aaa; font-weight: bold; }
     </style>
 </head>
 <body>
     <div id="score">0</div>
     <img src="bobr.jpg" id="bobr" alt="Бобер">
 
+    <div id="energy-container">
+        <div id="energy-bar"></div>
+    </div>
+    <div id="energy-text">⚡ 500 / 500</div>
+
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        
-        // 1. Беремо рахунок ТІЛЬКИ з пам'яті телефону (це миттєво)
-        let s = parseInt(localStorage.getItem('bobr_score')) || 0;
-        document.getElementById('score').innerText = s;
 
-        // 2. Окремо завантажуємо з хмари тільки при ПЕРШОМУ запуску, якщо телефон порожній
-        if (s === 0) {
-            tg.CloudStorage.getItem('user_score', (err, value) => {
-                if (!err && value) {
-                    s = parseInt(value);
-                    document.getElementById('score').innerText = s;
-                    localStorage.setItem('bobr_score', s.toString());
-                }
-            });
+        // Налаштування гри
+        const maxEnergy = 500;
+        let s = parseInt(localStorage.getItem('bobr_score')) || 0;
+        let energy = parseInt(localStorage.getItem('bobr_energy')) || maxEnergy;
+        
+        const scoreElement = document.getElementById('score');
+        const energyBar = document.getElementById('energy-bar');
+        const energyText = document.getElementById('energy-text');
+
+        scoreElement.innerText = s;
+
+        // Оновлення інтерфейсу енергії
+        function updateEnergyUI() {
+            let percent = (energy / maxEnergy) * 100;
+            energyBar.style.width = percent + "%";
+            energyText.innerText = ⚡ ${Math.floor(energy)} / ${maxEnergy};
         }
 
-        // 3. Клік - записуємо в пам'ять телефону миттєво
+        updateEnergyUI();
+
+        // Клік по Бобру
         document.getElementById('bobr').onclick = () => {
-            s++;
-            document.getElementById('score').innerText = s;
-            localStorage.setItem('bobr_score', s.toString()); // Телефон запам'ятав за 0.001 сек
-            tg.HapticFeedback.impactOccurred('light');
+            if (energy >= 1) {
+                s++;
+                energy -= 1;
+                scoreElement.innerText = s;
+                
+                updateEnergyUI();
+                tg.HapticFeedback.impactOccurred('light');
+
+                // Зберігаємо в телефон
+                localStorage.setItem('bobr_score', s.toString());
+                localStorage.setItem('bobr_energy', energy.toString());
+            } else {
+                // Якщо енергії нема - трохи трусимо текст
+                energyText.style.color = "red";
+                setTimeout(() => energyText.style.color = "#aaa", 300);
+                tg.HapticFeedback.notificationOccurred('error');
+            }
         };
 
-        // 4. Раз на 5 секунд тихенько відправляємо в хмару Telegram про всяк випадок
+        // Відновлення енергії (1 одиниця на секунду)
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy += 1;
+                if (energy > maxEnergy) energy = maxEnergy;
+                updateEnergyUI();
+                localStorage.setItem('bobr_energy', energy.toString());
+            }
+        }, 1000);
+
+        // Синхронізація з хмарою раз на 5 сек
         setInterval(() => {
             tg.CloudStorage.setItem('user_score', s.toString());
         }, 5000);
-
     </script>
 </body>
 </html>
