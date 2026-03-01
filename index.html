@@ -6,67 +6,78 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { 
-            background: #000; color: #fff; text-align: center; font-family: -apple-system, system-ui, sans-serif; 
-            margin: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; height: 100vh; -webkit-user-select: none;
+            background: #000; color: #fff; text-align: center; font-family: -apple-system, sans-serif; 
+            margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
         }
-        #score { font-size: 60px; color: gold; font-weight: bold; margin-bottom: 20px; }
-        #bobr { width: 220px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
+        #score { font-size: 70px; color: gold; font-weight: bold; margin-bottom: 10px; }
+        #bobr { width: 230px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
         #bobr:active { transform: scale(0.95); }
-        #status { font-size: 14px; color: #555; margin-top: 10px; }
+        
+        /* Смужка енергії (фікс для iPhone) */
+        .e-container { width: 260px; height: 20px; background: #333; border-radius: 10px; border: 2px solid #fff; margin-top: 25px; overflow: hidden; position: relative; }
+        #e-bar { width: 100%; height: 100%; background: #ffcc00 !important; display: block; transition: width 0.2s; }
+        #e-text { font-size: 16px; margin-top: 8px; font-weight: bold; color: #fff; }
     </style>
 </head>
 <body>
 
     <div id="score">0</div>
     <img src="bobr.jpg" id="bobr" alt="Бобер">
-    <div id="status">Завантаження...</div>
+
+    <div class="e-container">
+        <div id="e-bar"></div>
+    </div>
+    <div id="e-text">⚡ 500 / 500</div>
 
     <script>
         var tg = window.Telegram.WebApp;
         tg.expand();
-        tg.ready(); // Важливо для iPhone
+        tg.ready();
 
         var score = 0;
+        var energy = 500;
+        var maxEnergy = 500;
+
         var scoreEl = document.getElementById('score');
-        var statusEl = document.getElementById('status');
+        var barEl = document.getElementById('e-bar');
+        var textEl = document.getElementById('e-text');
 
-        // 1. Спочатку пробуємо взяти з локальної пам'яті
-        var localS = localStorage.getItem('bobr_v2');
-        if (localS) {
-            score = parseInt(localS);
-            scoreEl.innerText = score;
-        }
-
-        // 2. Отримуємо дані з хмари (синхронізація)
-        tg.CloudStorage.getItem('user_score', function(err, value) {
+        // 1. ПЕРЕВІРКА ХМАРИ (синхронізація)
+        tg.CloudStorage.getItem('total_clicks', function(err, value) {
             if (!err && value) {
-                var cloudScore = parseInt(value);
-                if (cloudScore > score) {
-                    score = cloudScore;
-                    scoreEl.innerText = score;
-                    localStorage.setItem('bobr_v2', score);
-                }
+                score = parseInt(value);
+                scoreEl.innerText = score;
             }
-            statusEl.innerText = "Синхронізовано";
         });
 
-        // Клік
+        // 2. КЛІК
         document.getElementById('bobr').onclick = function() {
-            score++;
-            scoreEl.innerText = score;
-            localStorage.setItem('bobr_v2', score);
-            
-            // Легка вібрація
-            if (tg.HapticFeedback) {
+            if (energy >= 1) {
+                score++;
+                energy--;
+                updateUI();
                 tg.HapticFeedback.impactOccurred('light');
             }
         };
 
-        // Збереження в хмару кожні 7 секунд
+        function updateUI() {
+            scoreEl.innerText = score;
+            textEl.innerText = "⚡ " + Math.floor(energy) + " / " + maxEnergy;
+            barEl.style.width = (energy / maxEnergy * 100) + "%";
+        }
+
+        // 3. ВІДНОВЛЕННЯ
         setInterval(function() {
-            tg.CloudStorage.setItem('user_score', score.toString());
-        }, 7000);
+            if (energy < maxEnergy) {
+                energy++;
+                updateUI();
+            }
+        }, 1000);
+
+        // 4. ЖОРСТКЕ ЗБЕРЕЖЕННЯ (кожні 5 секунд)
+        setInterval(function() {
+            tg.CloudStorage.setItem('total_clicks', score.toString());
+        }, 5000);
     </script>
 </body>
 </html>
