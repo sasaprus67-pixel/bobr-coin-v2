@@ -6,57 +6,57 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { background: #000; color: #fff; text-align: center; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        #score { font-size: 60px; color: gold; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-        #bobr { width: 260px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1)); }
+        #score { font-size: 70px; color: gold; font-weight: bold; margin-bottom: 10px; }
+        #status { font-size: 14px; color: #555; margin-bottom: 20px; height: 20px; }
+        #bobr { width: 260px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
         #bobr:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
     <div id="score">0</div>
+    <div id="status">Syncing...</div>
     <img src="bobr.jpg" id="bobr" alt="Бобер">
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        // Включаємо підтвердження закриття, щоб випадково не вийти
-        tg.enableClosingConfirmation();
+        tg.enableClosingConfirmation(); // Запитає "Ви впевнені?", що дасть час на збереження
         
         let s = 0;
-        let needsSave = false;
+        let lastSavedScore = 0;
+        let isSaving = false;
 
-        // Завантаження
+        // Завантаження при вході
         tg.CloudStorage.getItem('user_score', (err, value) => {
             if (!err && value) {
                 s = parseInt(value);
+                lastSavedScore = s;
                 document.getElementById('score').innerText = s;
+                document.getElementById('status').innerText = "Ready";
             }
         });
 
         document.getElementById('bobr').onclick = () => {
             s++;
             document.getElementById('score').innerText = s;
+            document.getElementById('status').innerText = "Saving...";
             tg.HapticFeedback.impactOccurred('light');
-            needsSave = true;
         };
 
-        // Зберігаємо кожну 1 секунду, якщо були зміни
+        // Жорсткий цикл збереження кожні 0.5 сек
         setInterval(() => {
-            if (needsSave) {
-                tg.CloudStorage.setItem('user_score', s.toString(), (err) => {
+            if (s !== lastSavedScore && !isSaving) {
+                isSaving = true;
+                let scoreToSave = s;
+                tg.CloudStorage.setItem('user_score', scoreToSave.toString(), (err) => {
+                    isSaving = false;
                     if (!err) {
-                        needsSave = false;
-                        console.log('Saved:', s);
+                        lastSavedScore = scoreToSave;
+                        document.getElementById('status').innerText = "Saved ✓";
                     }
                 });
             }
-        }, 1000);
-
-        // Фінальна спроба зберегти при закритті
-        window.addEventListener('unload', () => {
-            if (needsSave) {
-                tg.CloudStorage.setItem('user_score', s.toString());
-            }
-        });
+        }, 500);
     </script>
 </body>
 </html>
