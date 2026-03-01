@@ -79,16 +79,15 @@ document.getElementById('bz').onclick=()=>{
     }
 };
 
-// Кнопка КАНАЛУ
 document.getElementById('bJoin').onclick = () => {
-    tg.openTelegramLink("https://t.me/TVOI_KANAL"); // ЗАМІНИ TVOI_KANAL
+    // ЗАМІНИ TVOI_KANAL НА СВІЙ КАНАЛ (НАПРИКЛАД bobr_news)
+    tg.openTelegramLink("https://t.me/TVOI_KANAL"); 
 };
 
-// Кнопка ЗАПРОШЕННЯ
 document.getElementById('bInv').onclick = () => {
-    let botN = "TVOI_BOT"; // ЗАМІНИ TVOI_BOT (без @)
+    let botN = "MySuperBobr_bot"; 
     let uid = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : "0";
-    let link = "https://t.me/share/url?url=https://t.me/" + botN + "?start=" + uid + "&text=Join me! 🦫";
+    let link = "https://t.me/share/url?url=https://t.me/" + botN + "?start=" + uid + "&text=Play Bobr Clicker with me! 🦫";
     tg.openTelegramLink(link);
 };
 
