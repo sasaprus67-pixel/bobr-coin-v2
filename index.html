@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: #000; color: #fff; text-align: center; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #score { font-size: 60px; color: gold; font-weight: bold; margin-bottom: 20px; }
+        #bobr { width: 260px; cursor: pointer; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; }
+        #bobr:active { transform: scale(0.9); }
+    </style>
+</head>
+<body>
+    <div id="score">0</div>
+    <img src="bobr.jpg" id="bobr" alt="Бобер">
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        let s = 0;
+        document.getElementById('bobr').onclick = () => {
+            s++;
+            document.getElementById('score').innerText = s;
+            tg.HapticFeedback.impactOccurred('medium');
+        };
+    </script>
+</body>
+</html>
