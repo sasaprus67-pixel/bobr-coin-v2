@@ -36,8 +36,12 @@
     <div id="z" class="t">
         <h2>Tasks</h2>
         <div class="c">
-            <div><b>Invite Friend</b><br><small>Get +500 coins!</small></div>
-            <button class="btn" id="bi">Invite</button>
+            <div><b>Join Channel</b><br><small>+500 coins</small></div>
+            <button class="btn" id="bJoin">Join</button>
+        </div>
+        <div class="c">
+            <div><b>Invite Friend</b><br><small>+500 coins</small></div>
+            <button class="btn" id="bInv">Invite</button>
         </div>
     </div>
     <div class="n">
@@ -48,18 +52,17 @@
     <script>
 var tg=window.Telegram.WebApp, s=0, e=250, bs=1, bt=0, lastC = 0;
 tg.expand();
-var sE=document.getElementById('sc'), fE=document.getElementById('f'), eE=document.getElementById('en'), bz=document.getElementById('bz'), btE=document.getElementById('bt'), bI=document.getElementById('b'), bInv=document.getElementById('bi');
+var sE=document.getElementById('sc'), fE=document.getElementById('f'), eE=document.getElementById('en'), bz=document.getElementById('bz'), btE=document.getElementById('bt'), bI=document.getElementById('b');
 
 function u(){sE.innerText=s;document.querySelectorAll('.cs').forEach(x=>x.innerText=s);eE.innerText="⚡ "+Math.floor(e)+"/250";fE.style.width=(e/2.5)+"%";bz.disabled=(s<200||bt>0)}
 tg.CloudStorage.getItem('sc',(er,v)=>{if(v&&parseInt(v)>s){s=parseInt(v);u()}});
 
-// ЗАХИСТ ВІД ДЮПУ (Блокуємо клавіатуру)
 window.onkeydown = (i) => { if(i.keyCode === 32 || i.keyCode === 13) i.preventDefault(); };
 
 bI.onclick=(v)=>{
     v.preventDefault();
     let now = Date.now();
-    if(now - lastC < 35) return; // Анті-клікер
+    if(now - lastC < 35) return;
     lastC = now;
     if(e>=1){ s+=bs; e--; u(); tg.HapticFeedback.impactOccurred('light') }
     if(s%10==0)sv();
@@ -76,11 +79,17 @@ document.getElementById('bz').onclick=()=>{
     }
 };
 
-bInv.onclick=()=>{
-    let botName = "@MySuperBobr_bot"; // Наприклад MyBestBeaverBot (без @)
-    let userId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : "0";
-    let inviteLink = "https://t.me/share/url?url=https://t.me/" + botName + "?start=" + userId + "&text=Join my beaver colony! 🦫";
-    tg.openTelegramLink(inviteLink);
+// Кнопка КАНАЛУ
+document.getElementById('bJoin').onclick = () => {
+    tg.openTelegramLink("https://t.me/TVOI_KANAL"); // ЗАМІНИ TVOI_KANAL
+};
+
+// Кнопка ЗАПРОШЕННЯ
+document.getElementById('bInv').onclick = () => {
+    let botN = "TVOI_BOT"; // ЗАМІНИ TVOI_BOT (без @)
+    let uid = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : "0";
+    let link = "https://t.me/share/url?url=https://t.me/" + botN + "?start=" + uid + "&text=Join me! 🦫";
+    tg.openTelegramLink(link);
 };
 
 function sh(n,l){
