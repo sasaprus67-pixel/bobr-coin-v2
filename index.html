@@ -8,19 +8,17 @@ body{background:#000;color:#fff;text-align:center;font-family:sans-serif;margin:
 .n{display:flex;background:#111;padding:10px 0 20px;border-top:1px solid #333}.n div{flex:1;color:#888;font-size:14px}.n .a{color:gold}#bt{color:cyan;font-size:24px;font-weight:bold;height:30px}
 </style></head><body><div class="st">💰 <span class="cs">0</span></div>
 <div id="g" class="t active"><div id="sc">0</div><div id="bt"></div><img src="bobr.jpg" id="bobr"><div class="b-bg"><div id="b-f"></div></div><div id="en">⚡ 250 / 250</div></div>
-<div id="s" class="t"><h2>Шоп</h2><div class="c"><div><b>Тап</b><br><small id="md">+1 (100)</small></div><button class="btn" id="bm">Купити</button></div><div class="c"><div><b>X5</b><br><small>45с (200)</small></div><button class="btn" id="bz">Купити</button></div></div>
-<div id="z" class="t"><h2>Завд</h2><div class="c"><div><b>Друзі</b><br><small>+500</small></div><button class="btn" id="bi">Клик</button></div></div>
+<div id="s" class="t"><h2>Шоп</h2><div class="c"><div><b>Супер-Сила</b><br><small>X5 на 45с (200 монет)</small></div><button class="btn" id="bz">Купити</button></div></div>
+<div id="z" class="t"><h2>Завдання</h2><div class="c"><div><b>Друзі</b><br><small>Бонус +500</small></div><button class="btn" id="bi">Клик</button></div></div>
 <div class="n"><div class="a" onclick="sh('g',this)">Гра</div><div onclick="sh('s',this)">Шоп</div><div onclick="sh('z',this)">Завд</div></div><script>
-var tg=window.Telegram.WebApp,s=0,e=250,mt=1,mtp=100,bst=1,bt=0;tg.expand();
-var sE=document.getElementById('sc'),fE=document.getElementById('b-f'),eE=document.getElementById('en'),bm=document.getElementById('bm'),bz=document.getElementById('bz'),btE=document.getElementById('bt');
-function u(){sE.innerText=s;document.querySelectorAll('.cs').forEach(x=>x.innerText=s);eE.innerText="⚡ "+Math.floor(e)+"/250";fE.style.width=(e/2.5)+"%";
-document.getElementById('md').innerText="+"+mt+" ("+mtp+")";bm.disabled=(s<mtp);bz.disabled=(s<200||bt>0)}
-function sy(){tg.CloudStorage.getItem('sc',(er,v)=>{if(v&&parseInt(v)>s){s=parseInt(v);u()}});tg.CloudStorage.getItem('mt',(er,v)=>{if(v){mt=parseInt(v);mtp=mt*100;u()}})}
-sy();document.getElementById('bobr').onclick=()=>{let p=mt*bst;if(e>=p){s+=p;e-=p;u();tg.HapticFeedback.impactOccurred('light')}};
-document.getElementById('bm').onclick=()=>{if(s>=mtp){s-=mtp;mt++;mtp=mt*100;u();sv()}};
+var tg=window.Telegram.WebApp,s=0,e=250,bst=1,bt=0;tg.expand();
+var sE=document.getElementById('sc'),fE=document.getElementById('b-f'),eE=document.getElementById('en'),bz=document.getElementById('bz'),btE=document.getElementById('bt');
+function u(){sE.innerText=s;document.querySelectorAll('.cs').forEach(x=>x.innerText=s);eE.innerText="⚡ "+Math.floor(e)+"/250";fE.style.width=(e/2.5)+"%";bz.disabled=(s<200||bt>0)}
+function sy(){tg.CloudStorage.getItem('sc',(er,v)=>{if(v&&parseInt(v)>s){s=parseInt(v);u()}})}
+sy();document.getElementById('bobr').onclick=()=>{let p=bst;if(e>=1){s+=p;e-=1;u();tg.HapticFeedback.impactOccurred('light')}};
 document.getElementById('bz').onclick=()=>{if(s>=200&&bt<=0){s-=200;bst=5;bt=45;u();let i=setInterval(()=>{bt--;btE.innerText="🔥 "+bt+"с";if(bt<=0){clearInterval(i);bst=1;btE.innerText="";u()}sv()},1000)}};
 document.getElementById('bi').onclick=()=>{tg.openTelegramLink("https://t.me/share/url?url=https://t.me/YOUR_BOT&text=Грай!");s+=500;u();sv()};
 function sh(n,l){document.querySelectorAll('.t').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.n div').forEach(x=>x.classList.remove('a'));document.getElementById(n).classList.add('active');l.classList.add('a')}
-function sv(){tg.CloudStorage.setItem('sc',s.toString());tg.CloudStorage.setItem('mt',mt.toString())}
+function sv(){tg.CloudStorage.setItem('sc',s.toString())}
 setInterval(()=>{if(e<250){e++;u()}},1000);setInterval(sv,5000);setInterval(sy,10000);
 </script></body></html>
