@@ -1,97 +1,78 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { 
-            background: #000; color: #fff; text-align: center; font-family: sans-serif; 
-            margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
-        }
-        #score { font-size: 70px; color: gold; font-weight: bold; margin-bottom: 10px; }
-        #bobr { width: 200px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
-        #bobr:active { transform: scale(0.95); }
-        
-        /* Смужка, яку БУДЕ ВИДНО ВСЮДИ */
-        .e-container { 
-            width: 250px; height: 20px; background: #333; 
-            border-radius: 10px; border: 2px solid #fff; 
-            margin-top: 20px; overflow: hidden; display: block !important;
-        }
-        #e-bar { width: 100%; height: 100%; background: #ffcc00; display: block; transition: width 0.2s; }
-        #status-text { font-size: 14px; margin-top: 5px; color: #aaa; }
+        body{background:#000;color:#fff;text-align:center;font-family:sans-serif;margin:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+        .tab{display:none;flex-direction:column;align-items:center;justify-content:center;flex:1}
+        .active{display:flex}
+        #score{font-size:50px;color:gold;font-weight:bold}
+        #bobr{width:200px;cursor:pointer;transition:transform .05s;-webkit-tap-highlight-color:transparent}
+        #bobr:active{transform:scale(.95)}
+        .bar-bg{width:220px;height:12px;background:#333;border-radius:10px;border:1px solid #fff;margin-top:10px;overflow:hidden}
+        #bar-f{width:100%;height:100%;background:gold;transition:width .2s}
+        .card{background:#222;width:90%;padding:10px;border-radius:12px;margin:10px;display:flex;justify-content:space-between;align-items:center}
+        .btn{background:gold;color:#000;border:none;padding:8px 12px;border-radius:8px;font-weight:bold}
+        .nav{display:flex;background:#111;padding:12px 0;border-top:1px solid #333}
+        .nav div{flex:1;color:#888;font-size:14px}
+        .nav .act{color:gold}
     </style>
 </head>
 <body>
-
-    <div id="score">0</div>
-    <img src="bobr.jpg" id="bobr" alt="Бобер">
-
-    <div class="e-container">
-        <div id="e-bar"></div>
+    <div id="g" class="tab active">
+        <div id="sc">0</div>
+        <img src="bobr.jpg" id="bobr">
+        <div class="bar-bg"><div id="bar-f"></div></div>
+        <div id="en">⚡ 500 / 500</div>
     </div>
-    <div id="status-text">Завантаження даних...</div>
+    <div id="s" class="tab">
+        <h2>Магазин</h2>
+        <div class="card"><div><b>Мульти-тап</b><br><small id="mt-d">+1 (Ціна: 100)</small></div>
+        <button class="btn" id="b-mt">Купити</button></div>
+    </div>
+    <div id="t" class="tab">
+        <h2>Завдання</h2>
+        <div class="card"><div><b>Друзі</b><br><small>Бонус +500</small></div>
+        <button class="btn" id="b-i">Запросити</button></div>
+    </div>
+    <div class="nav">
+        <div class="act" onclick="t('g',this)">Гра</div>
+        <div onclick="t('s',this)">Магазин</div>
+        <div onclick="t('t',this)">Завдання</div>
+    </div>
+<script>
+    var tg=window.Telegram.WebApp;tg.expand();
+    var s=0,e=500,mt=1,mtp=100;
+    var scE=document.getElementById('sc'),fE=document.getElementById('bar-f'),eE=document.getElementById('en');
 
-    <script>
-        var tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
+    function u(){
+        scE.innerText=s;eE.innerText="⚡ "+e+" / 500";fE.style.width=(e/5)*"%";
+        document.getElementById('mt-d').innerText="+"+mt+" (Ціна: "+mtp+")";
+        document.getElementById('b-mt').disabled=(s<mtp);
+    }
+    tg.CloudStorage.getItem('sc',function(err,v){if(v){s=parseInt(v);u()}});
+    tg.CloudStorage.getItem('mt',function(err,v){if(v){mt=parseInt(v);mtp=mt*100;u()}});
 
-        var score = 0;
-        var energy = 500;
-        var maxE = 500;
-
-        var scoreEl = document.getElementById('score');
-        var barEl = document.getElementById('e-bar');
-        var statusEl = document.getElementById('status-text');
-
-        // ГОЛОВНА ФУНКЦІЯ: беремо дані тільки з хмари
-        function sync() {
-            tg.CloudStorage.getItem('total_clicks', function(err, value) {
-                if (!err && value) {
-                    var cloudScore = parseInt(value);
-                    if (cloudScore > score) {
-                        score = cloudScore;
-                        scoreEl.innerText = score;
-                        statusEl.innerText = "Синхронізовано з Telegram";
-                    }
-                }
-            });
-        }
-
-        sync(); // Оновити при вході
-
-        document.getElementById('bobr').onclick = function() {
-            if (energy >= 1) {
-                score++;
-                energy--;
-                scoreEl.innerText = score;
-                barEl.style.width = (energy / maxE * 100) + "%";
-                tg.HapticFeedback.impactOccurred('light');
-                
-                // Зберігаємо в хмару кожні 5 кліків
-                if (score % 5 === 0) {
-                    tg.CloudStorage.setItem('total_clicks', score.toString());
-                }
-            }
-        };
-
-        // Відновлення енергії
-        setInterval(function() {
-            if (energy < maxE) {
-                energy++;
-                barEl.style.width = (energy / maxE * 100) + "%";
-            }
-        }, 1000);
-
-        // Жорстка синхронізація кожні 10 секунд
-        setInterval(sync, 10000);
-        // Збереження кожні 5 секунд
-        setInterval(function() {
-            tg.CloudStorage.setItem('total_clicks', score.toString());
-        }, 5000);
-
-    </script>
+    document.getElementById('bobr').onclick=function(){
+        if(e>=mt){s+=mt;e-=mt;u();tg.HapticFeedback.impactOccurred('light')}
+    };
+    document.getElementById('b-mt').onclick=function(){
+        if(s>=mtp){s-=mtp;mt++;mtp=mt*100;u();save()}
+    };
+    document.getElementById('b-i').onclick=function(){
+        var url="https://t.me/share/url?url=https://t.me/YOUR_BOT&text=Грай!";
+        tg.openTelegramLink(url);s+=500;u();save();
+    };
+    function t(n,el){
+        var c=document.getElementsByClassName('tab');for(var i=0;i<c.length;i++)c[i].classList.remove('active');
+        var nI=document.querySelectorAll('.nav div');for(var i=0;i<nI.length;i++)nI[i].classList.remove('act');
+        document.getElementById(n).classList.add('active');el.classList.add('act');
+    }
+    function save(){tg.CloudStorage.setItem('sc',s.toString());tg.CloudStorage.setItem('mt',mt.toString())}
+    setInterval(function(){if(e<500){e++;u()}},1000);
+    setInterval(save,5000);
+</script>
 </body>
 </html>
