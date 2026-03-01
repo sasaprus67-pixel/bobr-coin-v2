@@ -10,20 +10,17 @@
             margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
         }
         #score { font-size: 70px; color: gold; font-weight: bold; margin-bottom: 10px; }
-        #bobr { width: 230px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
+        #bobr { width: 200px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
         #bobr:active { transform: scale(0.95); }
         
-        /* Універсальна смужка для всіх пристроїв */
+        /* Смужка, яку БУДЕ ВИДНО ВСЮДИ */
         .e-container { 
-            width: 280px; height: 24px; background: #333; 
-            border-radius: 12px; border: 2px solid #fff; 
-            margin-top: 25px; overflow: hidden; position: relative;
+            width: 250px; height: 20px; background: #333; 
+            border-radius: 10px; border: 2px solid #fff; 
+            margin-top: 20px; overflow: hidden; display: block !important;
         }
-        #e-bar { 
-            width: 100%; height: 100%; background: #ffcc00 !important; 
-            display: block; transition: width 0.2s; 
-        }
-        #e-text { font-size: 18px; margin-top: 8px; font-weight: bold; }
+        #e-bar { width: 100%; height: 100%; background: #ffcc00; display: block; transition: width 0.2s; }
+        #status-text { font-size: 14px; margin-top: 5px; color: #aaa; }
     </style>
 </head>
 <body>
@@ -34,7 +31,7 @@
     <div class="e-container">
         <div id="e-bar"></div>
     </div>
-    <div id="e-text">⚡ 500 / 500</div>
+    <div id="status-text">Завантаження даних...</div>
 
     <script>
         var tg = window.Telegram.WebApp;
@@ -43,65 +40,57 @@
 
         var score = 0;
         var energy = 500;
-        var maxEnergy = 500;
+        var maxE = 500;
 
         var scoreEl = document.getElementById('score');
         var barEl = document.getElementById('e-bar');
-        var textEl = document.getElementById('e-text');
+        var statusEl = document.getElementById('status-text');
 
-        // Функція завантаження
-        function loadData() {
+        // ГОЛОВНА ФУНКЦІЯ: беремо дані тільки з хмари
+        function sync() {
             tg.CloudStorage.getItem('total_clicks', function(err, value) {
                 if (!err && value) {
                     var cloudScore = parseInt(value);
                     if (cloudScore > score) {
                         score = cloudScore;
                         scoreEl.innerText = score;
+                        statusEl.innerText = "Синхронізовано з Telegram";
                     }
                 }
             });
         }
 
-        loadData(); // Завантажуємо при старті
+        sync(); // Оновити при вході
 
-        // Клік
         document.getElementById('bobr').onclick = function() {
             if (energy >= 1) {
                 score++;
                 energy--;
-                updateUI();
+                scoreEl.innerText = score;
+                barEl.style.width = (energy / maxE * 100) + "%";
                 tg.HapticFeedback.impactOccurred('light');
                 
-                // Кожні 10 кліків примусово штовхаємо в хмару
-                if (score % 10 === 0) {
-                    saveToCloud();
+                // Зберігаємо в хмару кожні 5 кліків
+                if (score % 5 === 0) {
+                    tg.CloudStorage.setItem('total_clicks', score.toString());
                 }
             }
         };
 
-        function updateUI() {
-            scoreEl.innerText = score;
-            textEl.innerText = "⚡ " + Math.floor(energy) + " / " + maxEnergy;
-            barEl.style.width = (energy / maxEnergy * 100) + "%";
-        }
-
-        function saveToCloud() {
-            tg.CloudStorage.setItem('total_clicks', score.toString());
-        }
-
         // Відновлення енергії
         setInterval(function() {
-            if (energy < maxEnergy) {
+            if (energy < maxE) {
                 energy++;
-                updateUI();
+                barEl.style.width = (energy / maxE * 100) + "%";
             }
         }, 1000);
 
-        // Постійне збереження в хмару (раз на 5 сек)
-        setInterval(saveToCloud, 5000);
-        
-        // Перевірка хмари (раз на 10 сек) на випадок гри з іншого пристрою
-        setInterval(loadData, 10000);
+        // Жорстка синхронізація кожні 10 секунд
+        setInterval(sync, 10000);
+        // Збереження кожні 5 секунд
+        setInterval(function() {
+            tg.CloudStorage.setItem('total_clicks', score.toString());
+        }, 5000);
 
     </script>
 </body>
