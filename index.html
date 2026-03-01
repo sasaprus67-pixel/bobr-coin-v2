@@ -1,36 +1,72 @@
-<script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
-        
-        // 1. Спочатку миттєво беремо те, що є в пам'яті телефону
-        let s = parseInt(localStorage.getItem('bobr_score')) || 0;
-        document.getElementById('score').innerText = s;
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { 
+            background: #000; color: #fff; text-align: center; font-family: -apple-system, system-ui, sans-serif; 
+            margin: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; height: 100vh; -webkit-user-select: none;
+        }
+        #score { font-size: 60px; color: gold; font-weight: bold; margin-bottom: 20px; }
+        #bobr { width: 220px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
+        #bobr:active { transform: scale(0.95); }
+        #status { font-size: 14px; color: #555; margin-top: 10px; }
+    </style>
+</head>
+<body>
 
-        // 2. Одразу запитуємо хмару Telegram: "А що у тебе?"
-        tg.CloudStorage.getItem('user_score', (err, value) => {
+    <div id="score">0</div>
+    <img src="bobr.jpg" id="bobr" alt="Бобер">
+    <div id="status">Завантаження...</div>
+
+    <script>
+        var tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready(); // Важливо для iPhone
+
+        var score = 0;
+        var scoreEl = document.getElementById('score');
+        var statusEl = document.getElementById('status');
+
+        // 1. Спочатку пробуємо взяти з локальної пам'яті
+        var localS = localStorage.getItem('bobr_v2');
+        if (localS) {
+            score = parseInt(localS);
+            scoreEl.innerText = score;
+        }
+
+        // 2. Отримуємо дані з хмари (синхронізація)
+        tg.CloudStorage.getItem('user_score', function(err, value) {
             if (!err && value) {
-                let cloudScore = parseInt(value);
-                // Якщо в хмарі більше, ніж у телефоні (наприклад, зайшов з іншого ака) - оновлюємо
-                if (cloudScore > s) {
-                    s = cloudScore;
-                    document.getElementById('score').innerText = s;
-                    localStorage.setItem('bobr_score', s.toString());
+                var cloudScore = parseInt(value);
+                if (cloudScore > score) {
+                    score = cloudScore;
+                    scoreEl.innerText = score;
+                    localStorage.setItem('bobr_v2', score);
                 }
             }
+            statusEl.innerText = "Синхронізовано";
         });
 
-        // Клік - працює миттєво
-        document.getElementById('bobr').onclick = () => {
-            s++;
-            document.getElementById('score').innerText = s;
-            localStorage.setItem('bobr_score', s.toString());
-            tg.HapticFeedback.impactOccurred('light');
+        // Клік
+        document.getElementById('bobr').onclick = function() {
+            score++;
+            scoreEl.innerText = score;
+            localStorage.setItem('bobr_v2', score);
+            
+            // Легка вібрація
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
         };
 
-        // Кожні 5 секунд відправляємо в хмару актуальну цифру
-        setInterval(() => {
-            tg.CloudStorage.setItem('user_score', s.toString(), (err) => {
-                if (!err) console.log("Хмара оновлена:", s);
-            });
-        }, 5000);
+        // Збереження в хмару кожні 7 секунд
+        setInterval(function() {
+            tg.CloudStorage.setItem('user_score', score.toString());
+        }, 7000);
     </script>
+</body>
+</html>
