@@ -1,30 +1,25 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body { background: #000; color: #fff; text-align: center; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        #score { font-size: 80px; color: gold; font-weight: bold; margin-bottom: 20px; }
-        #bobr { width: 260px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
-        #bobr:active { transform: scale(0.95); }
-    </style>
-</head>
-<body>
-
-    <div id="score">0</div>
-    <img src="bobr.jpg" id="bobr" alt="Бобер">
-
-    <script>
+<script>
         let tg = window.Telegram.WebApp;
         tg.expand();
         
-        // Беремо рахунок з пам'яті телефону
+        // 1. Спочатку миттєво беремо те, що є в пам'яті телефону
         let s = parseInt(localStorage.getItem('bobr_score')) || 0;
         document.getElementById('score').innerText = s;
 
-        // Клік - миттєве збереження
+        // 2. Одразу запитуємо хмару Telegram: "А що у тебе?"
+        tg.CloudStorage.getItem('user_score', (err, value) => {
+            if (!err && value) {
+                let cloudScore = parseInt(value);
+                // Якщо в хмарі більше, ніж у телефоні (наприклад, зайшов з іншого ака) - оновлюємо
+                if (cloudScore > s) {
+                    s = cloudScore;
+                    document.getElementById('score').innerText = s;
+                    localStorage.setItem('bobr_score', s.toString());
+                }
+            }
+        });
+
+        // Клік - працює миттєво
         document.getElementById('bobr').onclick = () => {
             s++;
             document.getElementById('score').innerText = s;
@@ -32,10 +27,10 @@
             tg.HapticFeedback.impactOccurred('light');
         };
 
-        // Запасне збереження в хмару Telegram кожні 5 секунд
+        // Кожні 5 секунд відправляємо в хмару актуальну цифру
         setInterval(() => {
-            tg.CloudStorage.setItem('user_score', s.toString());
+            tg.CloudStorage.setItem('user_score', s.toString(), (err) => {
+                if (!err) console.log("Хмара оновлена:", s);
+            });
         }, 5000);
     </script>
-</body>
-</html>
