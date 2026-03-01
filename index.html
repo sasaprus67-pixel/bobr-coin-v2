@@ -9,51 +9,58 @@
         #score { font-size: 60px; color: cyan; font-weight: bold; margin-bottom: 10px; }
         #bobr { width: 240px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
         #bobr:active { transform: scale(0.95); }
-        #energy-container { width: 280px; height: 20px; background: #333; border-radius: 10px; margin: 20px auto 0 auto; overflow: hidden; border: 2px solid #fff; position: relative; }
-        #energy-bar { width: 100%; height: 100%; background: #ffcc00; transition: width 0.2s; }
+        #energy-container { width: 280px; height: 20px; background: #333; border-radius: 10px; margin: 20px auto 0 auto; overflow: hidden; border: 2px solid #fff; }
+        #energy-bar { width: 100%; height: 100%; background: #ffcc00; }
         #energy-text { font-size: 18px; margin-top: 10px; color: #fff; font-weight: bold; }
     </style>
 </head>
 <body>
     <div id="score">0</div>
-    <img src="bobr.jpg" id="bobr" alt="Бобер">
-    <div id="energy-container"><div id="energy-bar"></div></div>
+    <img src="bobr.jpg" id="bobr">
+    <div id="energy-container"><div id="energy-bar" id="bar"></div></div>
     <div id="energy-text">⚡ 500 / 500</div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        const maxEnergy = 500;
+
         let s = parseInt(localStorage.getItem('bobr_score')) || 0;
-        let energy = parseInt(localStorage.getItem('bobr_energy')) || maxEnergy;
-        const scoreElement = document.getElementById('score');
-        const energyBar = document.getElementById('energy-bar');
-        const energyText = document.getElementById('energy-text');
-        scoreElement.innerText = s;
-        function updateUI() {
-            energyBar.style.width = (energy / maxEnergy * 100) + "%";
-            energyText.innerText = ⚡ ${Math.floor(energy)} / ${maxEnergy};
+        let e = parseInt(localStorage.getItem('bobr_energy')) || 500;
+        const maxE = 500;
+
+        const scoreDisp = document.getElementById('score');
+        const barDisp = document.getElementById('energy-bar');
+        const textDisp = document.getElementById('energy-text');
+
+        // Оновлюємо екран при старті
+        scoreDisp.innerText = s;
+        
+        function redraw() {
+            scoreDisp.innerText = s;
+            textDisp.innerText = ⚡ ${Math.floor(e)} / ${maxE};
+            barDisp.style.width = (e / maxE * 100) + "%";
         }
-        updateUI();
+        
+        redraw();
+
         document.getElementById('bobr').onclick = () => {
-            if (energy >= 1) {
+            if (e >= 1) {
                 s++;
-                energy -= 1;
-                scoreElement.innerText = s;
-                updateUI();
+                e--;
+                localStorage.setItem('bobr_score', s);
+                localStorage.setItem('bobr_energy', e);
                 tg.HapticFeedback.impactOccurred('light');
-                localStorage.setItem('bobr_score', s.toString());
-                localStorage.setItem('bobr_energy', energy.toString());
+                redraw();
             }
         };
+
         setInterval(() => {
-            if (energy < maxEnergy) {
-                energy += 1;
-                updateUI();
-                localStorage.setItem('bobr_energy', energy.toString());
+            if (e < maxE) {
+                e++;
+                redraw();
+                localStorage.setItem('bobr_energy', e);
             }
         }, 1000);
-        setInterval(() => { tg.CloudStorage.setItem('user_score', s.toString()); }, 5000);
     </script>
 </body>
 </html>
