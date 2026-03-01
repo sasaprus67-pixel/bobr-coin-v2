@@ -6,9 +6,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { background: #000; color: #fff; text-align: center; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        #score { font-size: 60px; color: gold; font-weight: bold; margin-bottom: 20px; transition: all 0.1s; }
-        #bobr { width: 260px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
-        #bobr:active { transform: scale(0.92); }
+        #score { font-size: 60px; color: gold; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        #bobr { width: 260px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1)); }
+        #bobr:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -18,11 +18,13 @@
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+        // Включаємо підтвердження закриття, щоб випадково не вийти
+        tg.enableClosingConfirmation();
         
         let s = 0;
         let needsSave = false;
 
-        // 1. Завантажуємо один раз при старті
+        // Завантаження
         tg.CloudStorage.getItem('user_score', (err, value) => {
             if (!err && value) {
                 s = parseInt(value);
@@ -33,21 +35,24 @@
         document.getElementById('bobr').onclick = () => {
             s++;
             document.getElementById('score').innerText = s;
-            tg.HapticFeedback.impactOccurred('medium');
-            needsSave = true; // Позначаємо, що треба зберегти
+            tg.HapticFeedback.impactOccurred('light');
+            needsSave = true;
         };
 
-        // 2. Зберігаємо в хмару автоматично кожні 3 секунди (якщо були кліки)
+        // Зберігаємо кожну 1 секунду, якщо були зміни
         setInterval(() => {
             if (needsSave) {
                 tg.CloudStorage.setItem('user_score', s.toString(), (err) => {
-                    if (!err) needsSave = false;
+                    if (!err) {
+                        needsSave = false;
+                        console.log('Saved:', s);
+                    }
                 });
             }
-        }, 3000);
+        }, 1000);
 
-        // 3. Також пробуємо зберегти при закритті вікна
-        window.addEventListener('beforeunload', () => {
+        // Фінальна спроба зберегти при закритті
+        window.addEventListener('unload', () => {
             if (needsSave) {
                 tg.CloudStorage.setItem('user_score', s.toString());
             }
