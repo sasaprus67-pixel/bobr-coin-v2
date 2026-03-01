@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -14,14 +14,28 @@
 <body>
     <div id="score">0</div>
     <img src="bobr.jpg" id="bobr" alt="Бобер">
+
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+        
         let s = 0;
+
+        // 1. Завантажуємо збережений рахунок з хмари Telegram
+        tg.CloudStorage.getItem('user_score', (err, value) => {
+            if (!err && value) {
+                s = parseInt(value);
+                document.getElementById('score').innerText = s;
+            }
+        });
+
         document.getElementById('bobr').onclick = () => {
             s++;
             document.getElementById('score').innerText = s;
             tg.HapticFeedback.impactOccurred('medium');
+
+            // 2. Зберігаємо новий рахунок у хмару при кожному кліку
+            tg.CloudStorage.setItem('user_score', s.toString());
         };
     </script>
 </body>
