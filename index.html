@@ -80,14 +80,15 @@ document.getElementById('bz').onclick=()=>{
 };
 
 document.getElementById('bJoin').onclick = () => {
-    // ЗАМІНИ TVOI_KANAL НА СВІЙ КАНАЛ (НАПРИКЛАД bobr_news)
+    // ЗАМІНИ ТУТ НА СВІЙ КАНАЛ (БЕЗ @)
     tg.openTelegramLink("https://t.me/TVOI_KANAL"); 
 };
 
 document.getElementById('bInv').onclick = () => {
+    // СОБАЧКУ @ СТАВИТИ НЕ МОЖНА!
     let botN = "MySuperBobr_bot"; 
     let uid = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : "0";
-    let link = "https://t.me/share/url?url=https://t.me/" + botN + "?start=" + uid + "&text=Play Bobr Clicker with me! 🦫";
+    let link = "https://t.me/share/url?url=https://t.me/" + botN + "?start=" + uid + "&text=Join my beaver colony! 🦫";
     tg.openTelegramLink(link);
 };
 
