@@ -6,9 +6,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { background: #000; color: #fff; text-align: center; font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        #score { font-size: 60px; color: gold; font-weight: bold; margin-bottom: 20px; }
-        #bobr { width: 260px; cursor: pointer; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; }
-        #bobr:active { transform: scale(0.9); }
+        #score { font-size: 60px; color: gold; font-weight: bold; margin-bottom: 20px; transition: all 0.1s; }
+        #bobr { width: 260px; cursor: pointer; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
+        #bobr:active { transform: scale(0.92); }
     </style>
 </head>
 <body>
@@ -20,8 +20,9 @@
         tg.expand();
         
         let s = 0;
+        let needsSave = false;
 
-        // 1. Завантажуємо збережений рахунок з хмари Telegram
+        // 1. Завантажуємо один раз при старті
         tg.CloudStorage.getItem('user_score', (err, value) => {
             if (!err && value) {
                 s = parseInt(value);
@@ -33,10 +34,24 @@
             s++;
             document.getElementById('score').innerText = s;
             tg.HapticFeedback.impactOccurred('medium');
-
-            // 2. Зберігаємо новий рахунок у хмару при кожному кліку
-            tg.CloudStorage.setItem('user_score', s.toString());
+            needsSave = true; // Позначаємо, що треба зберегти
         };
+
+        // 2. Зберігаємо в хмару автоматично кожні 3 секунди (якщо були кліки)
+        setInterval(() => {
+            if (needsSave) {
+                tg.CloudStorage.setItem('user_score', s.toString(), (err) => {
+                    if (!err) needsSave = false;
+                });
+            }
+        }, 3000);
+
+        // 3. Також пробуємо зберегти при закритті вікна
+        window.addEventListener('beforeunload', () => {
+            if (needsSave) {
+                tg.CloudStorage.setItem('user_score', s.toString());
+            }
+        });
     </script>
 </body>
 </html>
